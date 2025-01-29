@@ -446,14 +446,16 @@ private[spark] class SparkSubmit extends Logging {
                 workingDirectory,
                 if (resolvedUri.getFragment != null) resolvedUri.getFragment else source.getName)
                 .getCanonicalFile
-              logInfo(log"Files ${MDC(LogKeys.URI, resolvedUri)}" +
-                log" from ${MDC(LogKeys.SOURCE_PATH, source)}" +
-                log" to ${MDC(LogKeys.DESTINATION_PATH, dest)}")
-              Utils.deleteRecursively(dest)
-              if (isArchive) {
-                Utils.unpack(source, dest)
-              } else {
-                Files.copy(source.toPath, dest.toPath)
+              if (!Files.exists(dest.toPath) || !Files.isSameFile(source.toPath, dest.toPath)) {
+                logInfo(log"Files ${MDC(LogKeys.URI, resolvedUri)}" +
+                  log" from ${MDC(LogKeys.SOURCE_PATH, source)}" +
+                  log" to ${MDC(LogKeys.DESTINATION_PATH, dest)}")
+                Utils.deleteRecursively(dest)
+                if (isArchive) {
+                  Utils.unpack(source, dest)
+                } else {
+                  Files.copy(source.toPath, dest.toPath)
+                }
               }
               // Keep the URIs of local files with the given fragments.
               Utils.getUriBuilder(
